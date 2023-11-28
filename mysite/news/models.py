@@ -5,19 +5,24 @@ from django.contrib.auth.models import User
 class Author(models.Model):
     authorUser = models.OneToOneField(User, on_delete=models.CASCADE)
     ratingAuthor = models.SmallIntegerField(default=0)
-    # posts = author.posts_set.all()
-
-# Метод update_rating() модели Author, который обновляет рейтинг текущего автора
-    # (метод принимает в качестве аргумента только self).
-# Он состоит из следующего:
-# суммарный рейтинг каждой статьи автора умножается на 3;
-# суммарный рейтинг всех комментариев автора;
-# суммарный рейтинг всех комментариев к статьям автора.
 
     def update_rating(self):
-        posts = self.post_set.all()
-        for post in posts:
-            post.rating = post.rating * 3
+        posts_rating = Post.objects.filter(author=self)
+        comments_rating = Comment.objects.filter(user=self.authorUser)
+        posts_comments_rating = Comment.objects.filter(post__author=self)
+
+        print(posts_rating)
+        print('-------------')
+        print(comments_rating)
+        print('-------------')
+        print(posts_comments_rating)
+        self.rating = posts_rating*3 + comments_rating + posts_comments_rating
+        self.save()
+
+
+        # posts = self.post_set.all()
+        # for post in posts:
+        #     post.rating = post.rating * 3
 
 class Category(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -27,6 +32,8 @@ class Category(models.Model):
 
 
 class Post(models.Model):
+
+
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     categoryType = models.CharField(max_lenght=20)
     dataCreations = models.DateTimeField(auto_now_add=True)
@@ -57,8 +64,8 @@ class PostCategory(models.Model):
 
 
 class Comment(models.Model):
-    commentPost = models.ForeignKey(Post, on_delete=models.CASCADE)
-    userPost = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()
     dataCreation = models.DateTimeField(auto_now_add=True)
     rating = models.SmallIntegerField(default=0)
