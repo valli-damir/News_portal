@@ -6,11 +6,11 @@ class Author(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     rating = models.IntegerField(default=0)
 
-    def update_rating(self: 'Author'):
+    def update_rating(self):
         posts_rating = self.post_set.aggregate(models.Sum('rating'))['rating__sum'] or 0
         posts_rating *= 3
 
-        comment_rating = self.comment_set.aggregate(models.Sum('rating'))['rating__sum'] or 0
+        comment_rating = Comment.objects.filter(user=self.user).aggregate(models.Sum('rating'))['rating__sum'] or 0
 
         post_comment_rating = self.post_set.aggregate(models.Sum('comment__rating'))[
                                   'comment__rating__sum'] or 0
@@ -41,7 +41,7 @@ class Post(models.Model):
         self.save()
 
     def preview(self):
-        return self.text[:124] + '...'
+        return f"{self.text[:124]}..." if len(self.text) > 124 else self.text
 
 
 class PostCategory(models.Model):
